@@ -1,0 +1,7 @@
+services:
+    rbm.ed2k.listener:
+        class: rbm\ed2k\event\main_listener
+        arguments:
+            - '@language'
+        tags:
+            - { name: event.listener }
