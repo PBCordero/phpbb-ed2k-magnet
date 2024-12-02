@@ -1,4 +1,4 @@
-# ed2k
+# ed2k/magnet links en phpBB
 
 ## Installation
 
