@@ -30,6 +30,20 @@ class main_listener implements EventSubscriberInterface
 		];
 	}
 
+	//* @var \phpbb\language\language */
+	protected $language;
+
+	// Propiedad para la URL del icono
+	protected $icon_url;
+
+    public function __construct(\phpbb\language\language $language)
+    {
+        $this->language = $language;
+
+        // Inicializar la URL del icono
+        $this->icon_url = './ext/rbm/ed2k/styles/all/theme/images/';
+    }
+
 	public function humanize_size($size, $rounder = 0)
 	{
 		$sizes		= array('Bytes', 'Kb', 'Mb', 'Gb', 'Tb', 'Pb', 'Eb', 'Zb', 'Yb');
@@ -71,7 +85,7 @@ class main_listener implements EventSubscriberInterface
 			$fname = htmlspecialchars($fname);
 		}
 
-		return "<img src='/foro/images/donkey.gif' border='0' title='donkey link' style='vertical-align: text-bottom;' />&nbsp;<a $href>$fname&nbsp;&nbsp;[$size]</a> <a href='http://ed2k.shortypower.org/?hash=$m[5]' target='_blank'><img src='/foro/images/stats.gif' border='0' title='Estadísticas eLink' style='vertical-align: text-bottom;' /></a>";
+		return "<img src='{$this->icon_url}donkey.gif' border='0' title='donkey link' style='vertical-align: text-bottom;' />&nbsp;<a $href>$fname&nbsp;&nbsp;[$size]</a> <a href='http://ed2k.shortypower.org/?hash=$m[5]' target='_blank'><img src='{$this->icon_url}stats.gif' border='0' title='Estadísticas eLink' style='vertical-align: text-bottom;' /></a>";
 	}
 
 	public function magnet_callback($mf)
@@ -90,7 +104,7 @@ class main_listener implements EventSubscriberInterface
 		}
 		$magnet_size = (empty($magnet_size)) ? '' : '  [' . $magnet_size . ']';
 		$magnet_name = (empty($magnet_name)) ? 'Enlace torrent magnético' . $magnet_size : $magnet_name . $magnet_size;
-		$magnet_final = "<img src='./images/magnet.gif' alt='Magnet' title='Torrent Magnet'> <a href='$magnet_link'>$magnet_name</a>";
+		$magnet_final = "<img src='{$this->icon_url}magnet.gif' alt='Magnet' title='Torrent Magnet'> <a href='$magnet_link'>$magnet_name</a>";
 		return $magnet_final;
 	}
 
