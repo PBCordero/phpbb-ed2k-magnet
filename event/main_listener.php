@@ -21,7 +21,7 @@ class main_listener implements EventSubscriberInterface
 	public function __construct(\phpbb\language\language $language)
 	{
 		$this->language = $language;
-		$this->icon_url = '/foro/ext/rbm/ed2k/styles/all/theme/images/';
+		$this->icon_url = "/foro/ext/rbm/ed2k/styles/all/theme/images/";
 	}
 
 	public static function getSubscribedEvents()
