@@ -1,5 +1,6 @@
 <?php
 
+
 /**
  *
  * ed2k. An extension for the phpBB Forum Software package.
@@ -7,6 +8,12 @@
  * @copyright (c) 2024, RebeldeMule
  * @license GNU General Public License, version 2 (GPL-2.0)
  *
+ ***** OJO BUG **** Si un enlace magnet contiene alguna URL para añadir trackers,
+ *					el enlace se romperá al mostrarlo en el foro.
+ *					Esto es un fallo conocido y no tengo solución por ahora.
+ *					La solución temporal de "No convertir automáticamente las URLs".
+ *					Para ello he añadido 'S_MAGIC_URL_CHECKED' => ' checked', a $template en la extensión "publica" por defecto.
+ *					Y en la base de datos he puesto el campo enable_magic_url de la tabla phpbb3_posts a 0.
  */
 
 namespace rbm\ed2k\event;
@@ -61,11 +68,16 @@ class main_listener implements EventSubscriberInterface
 
 	private function magnet_callback($mf)
 	{
-		$magnet_link = 'magnet:' . $mf[1];
+		// Guardamos el enlace magnet original antes de cualquier procesamiento
+		$original_magnet = 'magnet:' . $mf[1];
+		
+		// Decodificamos el enlace para procesarlo
+		$magnet_link = str_replace(['&amp;', '&quot;'], ['&', '"'], $original_magnet);
 		$magnet_rest = str_replace('magnet:?xt=urn:btih:', '', $magnet_link);
-		$magnet_troz = explode("&", htmlspecialchars_decode($magnet_rest));
+		$magnet_troz = explode("&", $magnet_rest);
 		$magnet_name = '';
 		$magnet_size = '';
+		
 		foreach ($magnet_troz as $valores) {
 			if (strpos($valores, 'dn=') === 0) {
 				$magnet_name = urldecode(substr($valores, 3));
@@ -74,11 +86,16 @@ class main_listener implements EventSubscriberInterface
 				$magnet_size = $this->humanize_size(substr($valores, 3));
 			}
 		}
+		
 		$magnet_size = $magnet_size ? "  [$magnet_size]" : '';
 		$magnet_name = $magnet_name ? $magnet_name . $magnet_size : 'Enlace torrent magnético' . $magnet_size;
-		$raw = htmlspecialchars($magnet_link);
+		
+		// Usamos el enlace original para el data-raw, codificado para HTML pero sin procesar las URLs
+		$raw = urldecode(str_replace('"', '&quot;', $magnet_link));
 		$checkbox = "<input type='checkbox' class='ed2k-magnet-checkbox' data-raw=\"$raw\" />";
-		return "$checkbox <img src='{$this->icon_url}magnet.gif' alt='Magnet' title='Torrent Magnet'> <a href='$magnet_link'>$magnet_name</a>";
+		
+		// Para el enlace visible y el href, usamos el enlace procesado normalmente
+		return "$checkbox <img src='{$this->icon_url}magnet.gif' alt='Magnet' title='Torrent Magnet'> <a href='" . htmlspecialchars($magnet_link) . "' class=\"postlink\">" . htmlspecialchars($magnet_name) . "</a>";
 	}
 
 	private $msg_counter = 0; // Para IDs únicos por mensaje
@@ -103,17 +120,15 @@ class main_listener implements EventSubscriberInterface
 			$message
 		);
 		$message = preg_replace_callback(
-			"#\[url\]magnet:?(\S+)\[/url\]#is",
+			"#\[url\]magnet:([^\[]+)\[/url\]#is",
 			[$this, 'magnet_callback'],
 			$message
 		);
-		// $message .= '<div>PATATAS</div>';
 		return $message;
 	}
 
 	public function viewtopic_ed2k($event)
 	{
-	// print_r($event);
 		$event['text'] = $this->procesar_ed2k($event['text']);
 	}
 
