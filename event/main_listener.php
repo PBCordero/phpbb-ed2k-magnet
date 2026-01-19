@@ -12,7 +12,7 @@
  *					el enlace se romperá al mostrarlo en el foro.
  *					Esto es un fallo conocido y no tengo solución por ahora.
  *					La solución temporal de "No convertir automáticamente las URLs".
- *					Para ello he añadido 'S_MAGIC_URL_CHECKED' => ' checked', a $template en la extensión "publica" por defecto.
+ *					Para ello he añadido 'S_MAGIC_URL_CHECKED' => ' checked', a $template en la extensión "publica" por defecto. @main_listener.php#65
  *					Y en la base de datos he puesto el campo enable_magic_url de la tabla phpbb3_posts a 0.
  */
 
@@ -54,16 +54,40 @@ class main_listener implements EventSubscriberInterface
 
 	private function ed2k_link_callback($m)
 	{
+		// Deserialización y limpieza básica
+		$url = $m[2];
+		$filename = rawurldecode($m[3]);
+		$size_bytes = $m[4];
+		$hash = $m[5];
+
+		// Truncado de nombre (UTF-8 safe)
 		$max_len = 100;
-		$href = 'href="' . $m[2] . '" class="postlink"';
-		$fname = htmlspecialchars(rawurldecode($m[3]));
-		$size = $this->humanize_size($m[4]);
-		if (strlen($fname) > $max_len) {
-			$fname = substr($fname, 0, $max_len - 19) . '...' . substr($fname, -16);
+		if (mb_strlen($filename) > $max_len) {
+			$filename = mb_substr($filename, 0, $max_len - 19) . '...' . mb_substr($filename, -16);
 		}
-		$raw = htmlspecialchars($m[2]);
-		$checkbox = "<input type='checkbox' class='ed2k-magnet-checkbox' data-raw=\"$raw\" />";
-		return "$checkbox <img src='{$this->icon_url}donkey.gif' border='0' title='donkey link' style='vertical-align: text-bottom;' />&nbsp;<a $href>$fname&nbsp;&nbsp;[$size]</a> <a href='http://ed2k.shortypower.org/?hash=$m[5]' target='_blank'><img src='{$this->icon_url}stats.gif' border='0' title='Estadísticas eLink' style='vertical-align: text-bottom;' /></a>";
+		
+		// Preparación de variables para la vista
+		$filename_html = htmlspecialchars($filename);
+		$url_html = htmlspecialchars($url);
+		$size = $this->humanize_size($size_bytes);
+		$stats_url = 'http://ed2k.shortypower.org/?hash=' . $hash;
+
+		// Construcción del checkbox
+		$checkbox = sprintf(
+			'<input type="checkbox" class="ed2k-magnet-checkbox" data-raw="%s" />',
+			$url_html
+		);
+
+		// Construcción del HTML final
+		return sprintf(
+			'<div class="contenedor-elink">%s <a href="%s" target="_blank"><i class="icon fa-bar-chart fa-fw ed2k-stats" aria-hidden="true"></i></a> <img src="%sdonkey.gif" border="0" title="donkey link" style="padding-top: 3px;" /><a href="%s" class="postlink">%s&nbsp;&nbsp;[%s]</a></div>',
+			$checkbox,
+			$stats_url,
+			$this->icon_url,
+			$url_html,
+			$filename_html,
+			$size
+		);
 	}
 
 	private function magnet_callback($mf)
