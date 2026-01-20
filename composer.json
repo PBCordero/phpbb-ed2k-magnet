@@ -1,9 +1,9 @@
 {
     "name": "rbm/ed2k",
     "type": "phpbb-extension",
-    "description": "",
+    "description": "Muestra los enlaces ed2k y magnet en los mensajes.",
     "homepage": "https://www.rebeldemule.org/",
-    "version": "1.0.0-dev",
+    "version": "1.0.0",
     "time": "2024-09-27",
     "license": "GPL-2.0-only",
     "authors": [
