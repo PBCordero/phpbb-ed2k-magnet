@@ -114,6 +114,63 @@ jQuery(function($) {
         }
     });
 
+    // 7. Clic en el botón Enviar: ejecutar enlaces ed2k:/magnet:
+    $('#ed2k-enviar').on('click', function() {
+        const raw = $linksList.val() || '';
+        // Extraer líneas que empiecen por ed2k: o magnet:
+        const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        const validRx = /^(?:ed2k:|magnet:)/i;
+        const links = lines.filter(l => validRx.test(l));
+
+        if (links.length === 0) {
+            alert('No hay enlaces ed2k o magnet válidos para enviar.');
+            return;
+        }
+
+        // Función que crea un iframe oculto y le asigna el src para disparar el handler del sistema
+        function dispatchLinkHref(href) {
+            try {
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                // sandbox no debe bloquear navegación al handler de URI personalizados
+                iframe.src = href;
+                document.body.appendChild(iframe);
+                // Limpiar pasado un tiempo (dejamos más margen para que el cliente procese)
+                setTimeout(function() {
+                    try { document.body.removeChild(iframe); } catch (e) { /* ignore */ }
+                }, 5000);
+            } catch (e) {
+                console.error('ED2K Modal: fallo al despachar enlace', href, e);
+            }
+        }
+
+        // Enviar: despachar el primer enlace inmediatamente (preserva gesto de usuario),
+        // y los siguientes con retraso para dar tiempo al cliente.
+        console.info('ED2K Modal: enviando enlaces, total=', links.length, links);
+        if (links.length > 0) {
+            // primer intento inmediato
+            dispatchLinkHref(links[0]);
+
+            // resto con retardo
+            const delayMs = 800; // ajustable: 600-1200 si sigue habiendo pérdidas
+            for (let i = 1; i < links.length; i++) {
+                (function(href, idx) {
+                    setTimeout(function() {
+                        console.info('ED2K Modal: despachando (delayed) idx=', idx, ' href=', href);
+                        dispatchLinkHref(href);
+                    }, idx * delayMs);
+                })(links[i], i);
+            }
+        }
+
+        // Feedback visual no intrusivo
+        const oldText = $copyFeedback.text();
+        $copyFeedback.text('Enviados').show().delay(1500).fadeOut(400, function() { $copyFeedback.text(oldText); });
+
+        // Cerrar modal
+        closeModal();
+    });
+
     // === EJECUCIÓN INICIAL ===
      // Comprobar estado al cargar la página por si acaso
     updateButtonState(); 
