@@ -1,4 +1,4 @@
-# ed2k/magnet links en phpBB 4.0.x
+# ed2k/magnet links en phpBB 3.3.x
 
 ## Installation
 
