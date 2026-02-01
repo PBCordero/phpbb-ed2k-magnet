@@ -23,12 +23,16 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class main_listener implements EventSubscriberInterface
 {
 	protected $language;
+    protected $phpbb_root_path;
 	protected $icon_url;
 
-	public function __construct(\phpbb\language\language $language)
-	{
+	public function __construct(
+		\phpbb\language\language $language,
+		$phpbb_root_path
+	) {
 		$this->language = $language;
-		$this->icon_url = "/foro/ext/rbm/ed2k/styles/all/theme/images/";
+        $this->phpbb_root_path = $phpbb_root_path;
+		$this->icon_url = $phpbb_root_path . "ext/rbm/ed2k/styles/all/theme/images/";
 	}
 
 	public static function getSubscribedEvents()
