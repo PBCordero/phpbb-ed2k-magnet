@@ -48,7 +48,7 @@
 
 /* Contenido del Modal */
 #ed2k-modal-content {
-    background-color: var(--color-2);
+    background-color: var(--color-2, #e5e5e5);
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
@@ -92,7 +92,7 @@
     /* Incluye padding y border en el width */
     margin-bottom: 10px;
     font-family: monospace;
-    background-color: var(--color-3);
+    background-color: var(--color-3, #ffffff);
     border: 1px solid #ccc;
     padding: 8px;
     resize: vertical;
